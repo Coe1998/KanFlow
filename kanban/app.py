@@ -270,6 +270,24 @@ def api_set_notes(project_id):
     return jsonify({"notes": saved})
 
 
+@app.route("/api/debug/gemini-models")
+def api_debug_gemini_models():
+    """Temporary debug endpoint — lists all Gemini models available for this API key."""
+    import os, urllib.request, urllib.error, json
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        return jsonify({"error": "GOOGLE_API_KEY not set"}), 400
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            data = json.loads(resp.read())
+        models = [m["name"] for m in data.get("models", [])
+                  if "generateContent" in m.get("supportedGenerationMethods", [])]
+        return jsonify({"available_models": models})
+    except urllib.error.HTTPError as e:
+        return jsonify({"error": e.read().decode()}), 502
+
+
 # ---------------------------------------------------------------------------
 # AI extraction endpoint
 # ---------------------------------------------------------------------------
@@ -357,6 +375,7 @@ def api_extract_tasks(project_id):
     try:
         tasks = ai.extract_tasks_from_notes(notes)
     except RuntimeError as e:
+        print(f"\n[GEMINI ERROR] {e}\n")   # stampa l'errore completo nel terminale
         return jsonify({"error": str(e)}), 502
 
     return jsonify({"tasks": tasks})

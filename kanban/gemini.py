@@ -86,7 +86,7 @@ def extract_tasks_from_notes(notes_text: str) -> list[dict]:
         ],
         "generationConfig": {
             "temperature":     0.2,   # low temperature → deterministic, structured
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 8192,
         },
     }
 
